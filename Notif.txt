@@ -1,0 +1,552 @@
+Backend http request c cgi customize the front use javascript effect elements
+
+Documentation
+
+
+Notif_retrie.c
+
+import all #
+
+#define MAX_BUFFER 1024
+
+void print_header() {
+    printf("Content-Type: text/plain\n\n");
+}
+
+int main() {
+    print_header();
+
+    // Simulate retrieving notifications (replace with actual logic)
+    printf("Notification 1\nNotification 2\nNotification 3");
+
+    return 0;
+}
+
+compile run - gcc -o notif_retrieve.cgi notif_retrieve.c
+
+Embedded html fuctionality cgi
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Urian Space</title>
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
+  <script>
+    window.onload = function() {
+      // Check if there are any cookies
+      if (!document.cookie) {
+        // If there are no cookies, redirect to login.html
+        window.location.href = 'loginfinal.html';
+        return;
+      }
+      // Make a request to the C CGI script for user check
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', 'http://172.17.100.12:8081/final/cgi-bin/check/match.o', true);
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4) {
+          if (xhr.status == 200) {
+            var result = xhr.responseText;
+            
+            // Check if the username is empty, contains only whitespace, or is "Failure"
+            if (!result || !result.trim() || result.trim() === "Failure") {
+              window.location.href = 'login2.html';
+            } else {
+              document.getElementById('signupLink').innerHTML = '<i class="fas fa-user-circle text-[#AED2FF] text-lg mr-2"></i>' + result + ' <span style="margin-left: 20px;"><a href="login2.html" style="margin-left: 10px;" onclick="clearCookies(event)"><i class="fas fa-sign-out-alt text-[#AED2FF] text-lg mr-2"></i>Sign Out</a></span>';
+              document.getElementById('signupLink').href = "#";
+              document.getElementById('signinLink').style.display = 'none';
+            }
+          } else if (xhr.status == 303) {
+            // Handle redirect manually
+            window.location.href = 'loginfinal.html';
+          }
+        }
+      };
+      xhr.send();
+
+      // Add click event listener to notification link
+      var notificationLink = document.getElementById('notificationLink');
+      var notificationDropdown = document.getElementById('notificationDropdown');
+      
+      notificationLink.addEventListener('click', function(event) {
+        // Toggle visibility of dropdown content
+        if (notificationDropdown.classList.contains('hidden')) {
+          notificationDropdown.classList.remove('hidden');
+        } else {
+          notificationDropdown.classList.add('hidden');
+        }
+        // Prevent default link behavior
+        event.preventDefault();
+      });
+
+      // Make a request to the C program to retrieve notification content
+      var xhrNotif = new XMLHttpRequest();
+      xhrNotif.open('GET', 'http://172.17.100.12:8081/final/cgi-bin/notif_retrieve.cgi', true); // Adjust the URL as needed
+      xhrNotif.onreadystatechange = function() {
+        if (xhrNotif.readyState == 4) {
+          if (xhrNotif.status == 200) {
+            var notifications = xhrNotif.responseText.trim().split('\n');
+
+            // Check if notifications are empty
+            if (notifications.length > 0 && notifications[0] !== "") {
+              // Populate dropdown with notification content
+              var dropdown = document.getElementById('notificationDropdown');
+              dropdown.innerHTML = ''; // Clear previous content
+
+              notifications.forEach(function(notification) {
+                var notificationLink = document.createElement('a');
+                notificationLink.href = '#';
+                notificationLink.classList.add('block', 'py-2', 'px-4', 'text-sm', 'text-gray-700', 'hover:bg-gray-100');
+                notificationLink.textContent = notification;
+                dropdown.appendChild(notificationLink);
+              });
+            } else {
+              // No notifications found
+              var dropdown = document.getElementById('notificationDropdown');
+              dropdown.innerHTML = '<a href="#" class="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100">No notifications</a>';
+            }
+          } else {
+            // Handle error
+            console.error('Failed to retrieve notifications. Status code:', xhrNotif.status);
+          }
+        }
+      };
+      xhrNotif.send();
+    };
+
+    // Function to clear cookies
+    function clearCookies(event) {
+      // Prevent the default action
+      event.preventDefault();
+
+      var cookies = document.cookie.split(";");
+
+      for (var i = 0; i < cookies.length; i++) {
+        var cookie = cookies[i];
+        var eqPos = cookie.indexOf("=");
+        var name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+        var path = ";path=" + "/";
+        var domain = ";domain=" + document.domain;
+        document.cookie = name + "=" + path + domain + ";expires=Thu, 01 Jan 2025 00:00:00 GMT";
+      }
+
+      // Redirect to login2.html
+      window.location.href = 'loginfinal.html';
+    }
+  </script>
+
+</head>
+<body class="relative">
+
+<header class="absolute top-0 left-0 bg-gradient-to-r from-purple-800 to-purple-500 w-full">
+
+  <!-- Navbar -->
+  <nav class="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8" aria-label="Global">
+
+    <!-- Brand Logo -->
+    <div class="flex lg:flex-1">
+      <a href="#" class="-m-1.8 p-1.5">
+        <span class="sr-only">Interactive Programming Technology</span>
+        <img class="h-20 w-auto" src="US.png" alt="">
+      </a>
+    </div>
+    
+    <!-- Navbar Links -->
+    <div class="hidden lg:flex lg:gap-x-12">
+
+      <!-- Dashboard Link -->
+      <a href="#" class="text-sm font-semibold leading-6 text-white hover:bg-[#27005D] flex items-center">
+        <i class="fas fa-tachometer-alt text-[#AED2FF] text-lg mr-2"></i>Dashboard
+      </a>
+
+      <!-- Products Link -->
+      <a href="#" class="text-sm font-semibold leading-6 text-white hover:bg-[#27005D] flex items-center">
+        <i class="fas fa-box-open text-[#AED2FF] text-lg mr-2"></i>Products
+      </a>
+
+      <!-- Help & Support Link -->
+      <a href="#" class="text-sm font-semibold leading-6 text-white hover:bg-[#27005D] flex items-center">
+        <i class="fa-solid fa-circle-question text-[#AED2FF] text-lg mr-2"></i>Help & Support
+      </a>
+
+      <!-- Notifications Link -->
+      <div class="relative">
+        <a href="#" id="notificationLink" class="text-sm font-semibold leading-6 text-white hover:bg-[#27005D] flex items-center">
+          <span class="text-[#AED2FF] mr-2 relative"><i class="fas fa-bell text-lg"></i>
+            <!-- Red Circle with Number -->
+            <span class="absolute -top-1 -right-1 bg-red-500 text-white w-4 h-4 flex items-center justify-center rounded-full hidden">3</span>
+          </span>
+          Notification
+        </a>
+        <!-- Dropdown Content -->
+        <div id="notificationDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5">
+        </div>
+      </div>
+
+      <!-- Sign in -->
+      <a href="login.html" id="signinLink" class="text-sm font-semibold leading-6 text-white hover:bg-[#27005D] flex items-center">
+        <i class="fas fa-sign-in-alt text-[#AED2FF] text-lg mr-2"></i>Sign In
+      </a>
+
+      <!-- Sign Up Link -->
+      <a href="register2.html" id="signupLink" class="text-sm font-semibold leading-6 text-white hover:bg-[#27005D] flex items-center ml-4">
+        <i class="fas fa-user-plus text-[#AED2FF] text-lg mr-2"></i>Sign Up
+      </a>
+    </div>
+  </nav>
+  
+  <!-- Search Bar -->
+  <div class="mx-auto flex max-w-5xl items-center justify-between p-6 lg:px-8">
+    <div class="flex-1 flex">
+      <input type="text" class="w-full border-none bg-white rounded-l-full px-4 py-3 text-gray-800" placeholder="Search for urianspace products...">
+      <button class="ml-1 p-3 items-center bg-white rounded-r-full text-purple-800">
+        <i class="fas fa-search"></i>
+      </button>
+    </div>
+
+    <!-- Cart Button -->
+    <div id="cartDropdown" class="relative ml-4">
+      <button id="cartDropdownButton" class="p-3 bg-white rounded-full text-purple-800">
+        <i class="fas fa-shopping-cart"></i>
+      </button>
+    
+      <!-- Cart Dropdown -->
+      <div id="cartDropdownMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5">
+        <a href="#" class="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100">View Shopping Cart</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- JavaScript -->
+<script src="drop_down.js"></script>
+<script src="color_module.js"></script>
+</body>
+</html>
+<!-- Created By: Nazir Buenavidez -->
+<!-- Official Project Header -->
+<!-- ! Ask Permission Before using this header interface -->
+
+
+modified javascript with cgi
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Urian Space</title>
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
+  <script>
+    window.onload = function() {
+      // Check if there are any cookies
+      if (!document.cookie) {
+        // If there are no cookies, redirect to login.html
+        window.location.href = 'loginfinal.html';
+        return;
+      }
+      // Make a request to the C CGI script for user check
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', 'http://172.17.100.12:8081/final/cgi-bin/check/match.o', true);
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4) {
+          if (xhr.status == 200) {
+            var result = xhr.responseText;
+            
+            // Check if the username is empty, contains only whitespace, or is "Failure"
+            if (!result || !result.trim() || result.trim() === "Failure") {
+              window.location.href = 'login2.html';
+            } else {
+              document.getElementById('signupLink').innerHTML = '<i class="fas fa-user-circle text-[#AED2FF] text-lg mr-2"></i>' + result + ' <span style="margin-left: 20px;"><a href="login2.html" style="margin-left: 10px;" onclick="clearCookies(event)"><i class="fas fa-sign-out-alt text-[#AED2FF] text-lg mr-2"></i>Sign Out</a></span>';
+              document.getElementById('signupLink').href = "#";
+              document.getElementById('signinLink').style.display = 'none';
+            }
+          } else if (xhr.status == 303) {
+            // Handle redirect manually
+            window.location.href = 'loginfinal.html';
+          }
+        }
+      };
+      xhr.send();
+
+      // Add click event listener to notification link
+      var notificationLink = document.getElementById('notificationLink');
+      var notificationDropdown = document.getElementById('notificationDropdown');
+      
+      notificationLink.addEventListener('click', function(event) {
+        // Toggle visibility of dropdown content
+        if (notificationDropdown.classList.contains('hidden')) {
+          notificationDropdown.classList.remove('hidden');
+        } else {
+          notificationDropdown.classList.add('hidden');
+        }
+        // Prevent default link behavior
+        event.preventDefault();
+      });
+
+      // Make a request to the C program to retrieve notification content
+      var xhrNotif = new XMLHttpRequest();
+      xhrNotif.open('GET', 'http://172.17.100.12:8081/final/cgi-bin/notif_retrieve.cgi', true); // Adjust the URL as needed
+      xhrNotif.onreadystatechange = function() {
+        if (xhrNotif.readyState == 4) {
+          if (xhrNotif.status == 200) {
+            var notifications = xhrNotif.responseText.trim().split('\n');
+
+            // Check if notifications are empty
+            if (notifications.length > 0 && notifications[0] !== "") {
+              // Populate dropdown with notification content
+              var dropdown = document.getElementById('notificationDropdown');
+              dropdown.innerHTML = ''; // Clear previous content
+
+              notifications.forEach(function(notification) {
+                var notificationLink = document.createElement('a');
+                notificationLink.href = '#';
+                notificationLink.classList.add('block', 'py-2', 'px-4', 'text-sm', 'text-gray-700', 'hover:bg-gray-100');
+                notificationLink.textContent = notification;
+                dropdown.appendChild(notificationLink);
+              });
+            } else {
+              // No notifications found
+              var dropdown = document.getElementById('notificationDropdown');
+              dropdown.innerHTML = '<a href="#" class="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100">No notifications</a>';
+            }
+          } else {
+            // Handle error
+            console.error('Failed to retrieve notifications. Status code:', xhrNotif.status);
+          }
+        }
+      };
+      xhrNotif.send();
+    };
+
+    // Function to clear cookies
+    function clearCookies(event) {
+      // Prevent the default action
+      event.preventDefault();
+
+      var cookies = document.cookie.split(";");
+
+      for (var i = 0; i < cookies.length; i++) {
+        var cookie = cookies[i];
+        var eqPos = cookie.indexOf("=");
+        var name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+        var path = ";path=" + "/";
+        var domain = ";domain=" + document.domain;
+        document.cookie = name + "=" + path + domain + ";expires=Thu, 01 Jan 2025 00:00:00 GMT";
+      }
+
+      // Redirect to login2.html
+      window.location.href = 'loginfinal.html';
+    }
+  </script>
+
+</head>
+<body class="relative">
+
+<header class="absolute top-0 left-0 bg-gradient-to-r from-purple-800 to-purple-500 w-full">
+
+  <!-- Navbar -->
+  <nav class="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8" aria-label="Global">
+
+    <!-- Brand Logo -->
+    <div class="flex lg:flex-1">
+      <a href="#" class="-m-1.8 p-1.5">
+        <span class="sr-only">Interactive Programming Technology</span>
+        <img class="h-20 w-auto" src="US.png" alt="">
+      </a>
+    </div>
+    
+    <!-- Navbar Links -->
+    <div class="hidden lg:flex lg:gap-x-12">
+
+      <!-- Dashboard Link -->
+      <a href="#" class="text-sm font-semibold leading-6 text-white hover:bg-[#27005D] flex items-center">
+        <i class="fas fa-tachometer-alt text-[#AED2FF] text-lg mr-2"></i>Dashboard
+      </a>
+
+      <!-- Products Link -->
+      <a href="#" class="text-sm font-semibold leading-6 text-white hover:bg-[#27005D] flex items-center">
+        <i class="fas fa-box-open text-[#AED2FF] text-lg mr-2"></i>Products
+      </a>
+
+      <!-- Help & Support Link -->
+      <a href="#" class="text-sm font-semibold leading-6 text-white hover:bg-[#27005D] flex items-center">
+        <i class="fa-solid fa-circle-question text-[#AED2FF] text-lg mr-2"></i>Help & Support
+      </a>
+
+      <!-- Notifications Link -->
+      <div class="relative">
+        <a href="#" id="notificationLink" class="text-sm font-semibold leading-6 text-white hover:bg-[#27005D] flex items-center">
+          <span class="text-[#AED2FF] mr-2 relative"><i class="fas fa-bell text-lg"></i>
+            <!-- Red Circle with Number -->
+            <span class="absolute -top-1 -right-1 bg-red-500 text-white w-4 h-4 flex items-center justify-center rounded-full hidden">3</span>
+          </span>
+          Notification
+        </a>
+        <!-- Dropdown Content -->
+        <div id="notificationDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5">
+        </div>
+      </div>
+
+      <!-- Sign in -->
+      <a href="login.html" id="signinLink" class="text-sm font-semibold leading-6 text-white hover:bg-[#27005D] flex items-center">
+        <i class="fas fa-sign-in-alt text-[#AED2FF] text-lg mr-2"></i>Sign In
+      </a>
+
+      <!-- Sign Up Link -->
+      <a href="register2.html" id="signupLink" class="text-sm font-semibold leading-6 text-white hover:bg-[#27005D] flex items-center ml-4">
+        <i class="fas fa-user-plus text-[#AED2FF] text-lg mr-2"></i>Sign Up
+      </a>
+    </div>
+  </nav>
+  
+  <!-- Search Bar -->
+  <div class="mx-auto flex max-w-5xl items-center justify-between p-6 lg:px-8">
+    <div class="flex-1 flex">
+      <input type="text" class="w-full border-none bg-white rounded-l-full px-4 py-3 text-gray-800" placeholder="Search for urianspace products...">
+      <button class="ml-1 p-3 items-center bg-white rounded-r-full text-purple-800">
+        <i class="fas fa-search"></i>
+      </button>
+    </div>
+
+    <!-- Cart Button -->
+    <div id="cartDropdown" class="relative ml-4">
+      <button id="cartDropdownButton" class="p-3 bg-white rounded-full text-purple-800">
+        <i class="fas fa-shopping-cart"></i>
+      </button>
+    
+      <!-- Cart Dropdown -->
+      <div id="cartDropdownMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5">
+        <a href="#" class="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100">View Shopping Cart</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- JavaScript -->
+<script src="drop_down.js"></script>
+<script src="color_module.js"></script>
+</body>
+</html>
+<!-- Created By: Nazir Buenavidez -->
+<!-- Official Project Header -->
+<!-- ! Ask Permission Before using this header interface -->
+
+
+
+add_notif.c cgi
+
+#define MAX_NOTIFICATIONS 100
+#define NOTIF_FILE "/path/to/notifications.txt" // Adjust the path to your notifications file
+
+void add_notification(const char *message) {
+    FILE *file = fopen(NOTIF_FILE, "a");
+    if (file == NULL) {
+        printf("Content-Type: text/plain\n\n");
+        printf("Error opening notifications file.");
+        return;
+    }
+    fprintf(file, "%s\n", message);
+    fclose(file);
+}
+
+int main() {
+    char *data;
+    int content_length;
+    char message[256];
+
+    printf("Content-Type: text/plain\n\n");
+
+    content_length = atoi(getenv("CONTENT_LENGTH"));
+    data = (char *)malloc(content_length + 1);
+    if (data == NULL) {
+        printf("Error allocating memory.");
+        return 1;
+    }
+    fread(data, 1, content_length, stdin);
+    data[content_length] = '\0';
+
+    sscanf(data, "message=%255s", message);
+
+    add_notification(message);
+    printf("Notification added successfully.");
+
+    free(data);
+    return 0;
+}
+
+delete notif cgi should imbed a javascript to front
+
+#define MAX_NOTIFICATIONS 100
+#define NOTIF_FILE "/path/to/notifications.txt" // Adjust the path to your notifications file
+
+void delete_notification(int index) {
+    FILE *file = fopen(NOTIF_FILE, "r");
+    if (file == NULL) {
+        printf("Content-Type: text/plain\n\n");
+        printf("Error opening notifications file.");
+        return;
+    }
+    
+    char notifications[MAX_NOTIFICATIONS][256];
+    int count = 0;
+    
+    // Read notifications into array
+    while (fgets(notifications[count], 256, file) != NULL && count < MAX_NOTIFICATIONS) {
+        count++;
+    }
+    
+    fclose(file);
+
+    // Rewrite notifications to file, skipping the one to be deleted
+    file = fopen(NOTIF_FILE, "w");
+    if (file == NULL) {
+        printf("Content-Type: text/plain\n\n");
+        printf("Error opening notifications file for writing.");
+        return;
+    }
+
+    for (int i = 0; i < count; i++) {
+        if (i != index) {
+            fprintf(file, "%s", notifications[i]);
+        }
+    }
+    
+    fclose(file);
+}
+
+int main() {
+    char *data;
+    int content_length;
+    int index;
+
+    printf("Content-Type: text/plain\n\n");
+
+    content_length = atoi(getenv("CONTENT_LENGTH"));
+    data = (char *)malloc(content_length + 1);
+    if (data == NULL) {
+        printf("Error allocating memory.");
+        return 1;
+    }
+    fread(data, 1, content_length, stdin);
+    data[content_length] = '\0';
+
+    sscanf(data, "index=%d", &index);
+
+    delete_notification(index);
+    printf("Notification deleted successfully.");
+
+    free(data);
+    return 0;
+}
